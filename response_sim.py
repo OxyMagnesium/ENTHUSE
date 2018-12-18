@@ -44,10 +44,13 @@ del pause
 
 t = 0
 hydrogenFlow = 0
+previousFlow = 0
 previousError = 0
 previousTime = 0.001
 integralSum = 0
-timeStep = 0.05
+apex = True
+timeStep = 0.02
+timeStepLength = 0.02
 startTime = time.time()
 
 print("Simulation started.\n")
@@ -62,12 +65,19 @@ while t < 9:
     hydrogenFlowTarget = 0.096*thrustError + 0.032*(thrustError - previousError)/(t - previousTime)
 
     flowError = hydrogenFlowTarget - hydrogenFlow
-    hydrogenFlow += flowError*0.01
+    hydrogenFlow += flowError*0.012 - 0.003*integralSum
     if hydrogenFlow > 1:
         hydrogenFlow = 1
     elif hydrogenFlow < 0:
         hydrogenFlow = 0
 
+    integralSum += hydrogenFlow*timeStepLength
+    if previousFlow > hydrogenFlow:
+        apex = False
+    if apex or thrustSetting - (thrust - hydrogenThrust) < 15:
+        integralSum *= 0.95
+
+    previousFlow = hydrogenFlow
     previousError = thrustError
     previousTime = t
 
@@ -86,7 +96,7 @@ while t < 9:
     sys.stdout.write("\rThrust: {0}% | Hydrogen Flow: {2} ({3}) | Elapsed time: {1} s".format(round(thrust, 2), round(t, 2), round(hydrogenFlow, 2), round(hydrogenFlowTarget, 2)))
     while time.time() - startTime < timeStep:
         continue
-    timeStep += 0.02
+    timeStep += timeStepLength
 
 pause = input("\n\nPress enter to exit.")
 plt.close()
