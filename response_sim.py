@@ -12,7 +12,7 @@ def nominalThrust(t):
     if t < 2:
         return responseCurve(2)
     elif t > 8.4:
-        return responseCurve(9)
+        return responseCurve(8.4)
     else:
         return responseCurve(t)
 
@@ -65,7 +65,7 @@ while t < 9:
     hydrogenFlowTarget = 0.096*thrustError + 0.032*(thrustError - previousError)/(t - previousTime)
 
     flowError = hydrogenFlowTarget - hydrogenFlow
-    hydrogenFlow += flowError*0.012 - 0.003*integralSum
+    hydrogenFlow += flowError*0.012 - 0.002*integralSum
     if hydrogenFlow > 1:
         hydrogenFlow = 1
     elif hydrogenFlow < 0:
@@ -75,7 +75,7 @@ while t < 9:
     if previousFlow > hydrogenFlow:
         apex = False
     if apex or thrustSetting - (thrust - hydrogenThrust) < 15:
-        integralSum *= 0.95
+        integralSum *= 0.96
 
     previousFlow = hydrogenFlow
     previousError = thrustError
