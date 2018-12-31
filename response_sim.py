@@ -6,7 +6,7 @@ import matplotlib.animation as animation
 matplotlib.use('TkAgg')
 
 def responseCurve(t):
-    return (thrustSetting*0.0104)*(0.0179*(t**5) - 0.4773*(t**4) + 4.0897*(t**3) - 11.2350*(t**2) + 10.8910*(t**1) + 2.4685*(t**0))
+    return (thrustSettingActual*0.0104)*(0.0179*(t**5) - 0.4773*(t**4) + 4.0897*(t**3) - 11.2350*(t**2) + 10.8910*(t**1) + 2.4685*(t**0))
 
 def nominalThrust(t):
     if t < 2:
@@ -22,7 +22,7 @@ ax = plt.subplot(1,1,1)
 ax.set_xlabel('Time (s)')
 ax.set_ylabel('Value (%)')
 ax.set_xlim(left = 0, right = 9)
-ax.set_ylim(bottom = 0, top = 110)
+ax.set_ylim(bottom = 0, top = 150)
 timeCoords = []
 thrustCoords = []
 nominalCoords = []
@@ -38,6 +38,11 @@ if thrustSetting == '':
     thrustSetting = 90.0
 else:
     thrustSetting = float(thrustSetting)
+if thrustSetting > 100.0:
+    thrustSettingActual = 100.0
+    thrustSetting = 125.0
+else:
+    thrustSettingActual = thrustSetting
 
 pause = input("Press enter to start simulation.\n")
 del pause
@@ -58,14 +63,14 @@ print("Throttle setting: {0}".format(str(thrustSetting)))
 
 while t < 9:
     t = time.time() - startTime
-    hydrogenThrust = 75*hydrogenFlow
+    hydrogenThrust = 120*hydrogenFlow
     thrust = nominalThrust(t) + hydrogenThrust
 
     thrustError = thrustSetting - thrust
-    hydrogenFlowTarget = 0.096*thrustError + 0.032*(thrustError - previousError)/(t - previousTime)
+    hydrogenFlowTarget = 0.092*thrustError + 0.024*(thrustError - previousError)/(t - previousTime)
 
     flowError = hydrogenFlowTarget - hydrogenFlow
-    hydrogenFlow += flowError*0.012 - 0.002*integralSum
+    hydrogenFlow += flowError*0.009 - 0.002*integralSum
     if hydrogenFlow > 1:
         hydrogenFlow = 1
     elif hydrogenFlow < 0:
@@ -74,8 +79,8 @@ while t < 9:
     integralSum += hydrogenFlow*timeStepLength
     if previousFlow > hydrogenFlow:
         apex = False
-    if apex or thrustSetting - (thrust - hydrogenThrust) < 15:
-        integralSum *= 0.96
+    if apex or thrustSetting - (thrust - hydrogenThrust) < 10:
+        integralSum *= 0.9
 
     previousFlow = hydrogenFlow
     previousError = thrustError
