@@ -53,9 +53,6 @@ previousFlow = 0
 previousError = 0
 previousTime = 0.001
 integralSum = 0
-apex = True
-timeStep = 0.02
-timeStepLength = 0.02
 startTime = time.time()
 
 print("Simulation started.\n")
@@ -67,20 +64,18 @@ while t < 9:
     thrust = nominalThrust(t) + hydrogenThrust
 
     thrustError = thrustSetting - thrust
-    hydrogenFlowTarget = 0.092*thrustError + 0.024*(thrustError - previousError)/(t - previousTime)
+    hydrogenFlowTarget = 0.092*thrustError + 0.025*(thrustError - previousError)/(t - previousTime)
 
     flowError = hydrogenFlowTarget - hydrogenFlow
-    hydrogenFlow += flowError*0.009 - 0.002*integralSum
+    hydrogenFlow += flowError*0.010 - 0.001*integralSum
     if hydrogenFlow > 1:
         hydrogenFlow = 1
     elif hydrogenFlow < 0:
         hydrogenFlow = 0
 
-    integralSum += hydrogenFlow*timeStepLength
-    if previousFlow > hydrogenFlow:
-        apex = False
-    if apex or thrustSetting - (thrust - hydrogenThrust) < 10:
-        integralSum *= 0.9
+    integralSum += hydrogenFlow*(t - previousTime)
+    if thrustSettingActual - (thrust - hydrogenThrust) < 20:
+        integralSum *= 0.95
 
     previousFlow = hydrogenFlow
     previousError = thrustError
@@ -99,9 +94,14 @@ while t < 9:
     fig.canvas.flush_events()
 
     sys.stdout.write("\rThrust: {0}% | Hydrogen Flow: {2} ({3}) | Elapsed time: {1} s".format(round(thrust, 2), round(t, 2), round(hydrogenFlow, 2), round(hydrogenFlowTarget, 2)))
-    while time.time() - startTime < timeStep:
-        continue
-    timeStep += timeStepLength
 
-pause = input("\n\nPress enter to exit.")
+save = input("\n\nSave current figure? (Y): ")
+if save.lower() == 'y':
+    saveName = '{0}_{1}.png'.format(int(thrustSettingActual), int(time.time()))
+    plt.savefig(saveName)
+    print("Figure saved as \"{0}\".".format(saveName))
+else:
+    print("Figure not saved.")
+
+pause = input("\nPress enter to exit.")
 plt.close()
